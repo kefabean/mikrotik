@@ -1,5 +1,4 @@
 # DHCP lease script to send alert when new device is added to the network
-# Install script here: /ip/dhcp-server/set lease-script=<NAME>
 
 # define leaseHostname to avoid hyphenated variable names
 :local leaseHostname $"lease-hostname"
@@ -10,13 +9,14 @@
 :while condition=[find $a $b] do={
    :set $a ("$[:pick $a 0 ([find $a $b]) ]"."$[:pick $a ([find $a $b]+1) ([:len $a]) ]")
 }
-:local $safeMAC $a
+:local safeMAC $a
+:local fqdn
 
 # create default fqdn for devices with blank hostname
 :if ([:len $leaseHostname] > 0) do={
-   :local fqdn "$leaseHostname.$leaseServerName"
+   :set fqdn "$leaseHostname.$leaseServerName"
 } else={
-   :local fqdn "unknown-$safeMAC.$leaseServerName"
+   :set fqdn "unknown-$safeMAC.$leaseServerName"
 }
 
 :if ([:len $leaseHostname] > 0) do={
