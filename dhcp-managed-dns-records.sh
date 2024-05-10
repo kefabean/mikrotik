@@ -3,8 +3,6 @@
 # Only add DNS record when registering DHCP client as deregistering usually immediately precedes a registration.
 :if ($leaseBound = "1") do={
 
-
-
    # define leaseHostname to avoid hyphenated variable names
    :local leaseHostname $"lease-hostname"
 
