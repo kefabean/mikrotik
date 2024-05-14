@@ -1,5 +1,7 @@
 # DHCP lease script to send alert when new device is added to the network
 
+:local months [:toarray "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"]
+
 # Only add DNS record when registering DHCP client as deregistering usually immediately precedes a registration.
 :if ($leaseBound = "1") do={
 
@@ -43,7 +45,11 @@
    # If no matching DNS record exists, create one and send email notification
    :if ([:len [/ip dns static find comment="$leaseComment" and address="$leaseActIP" and name="$fqdn"]] = 0) do={
       :delay 1
+      :local year [:pick [/system/clock/get date] 0 4]
+      :local month [:pick $months ([:tonum [:pick [/system/clock/get date] 5 7]] - 1)]
+      :local day [:pick [/system/clock/get date] 8 10]
+      :local time [:pick [/system/clock/get time] 0 5]
       /ip dns static add comment="$leaseComment" address="$leaseActIP" name="$fqdn" ttl="00:05:00"
-      /tool e-mail send to="daniel@kefa.uk" subject="Alert - New device added ($fqdn)" body="New DNS record created:\n\n$fqdn = $leaseActIP ($leaseActMAC)"
+      /tool e-mail send to="daniel@kefa.uk" subject="Alert - New device added ($fqdn)" body="New DNS record created on $day $month $year at $time:\n\n$fqdn = $leaseActIP ($leaseActMAC)"
    }
 }
