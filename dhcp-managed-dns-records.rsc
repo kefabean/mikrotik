@@ -22,11 +22,10 @@
       :set fqdn "unknown-$safeMAC.$leaseServerName"
    }
 
-   :log info "FQDN: $fqdn IP: $leaseActIP MAC: $leaseActMAC"
-
    # Set a comment that identifies the DNS record by DHCP server and MAC address
+   # WARNING: do not modify format of comment as script (remove-dns-for-expired-dhcp-lease.rsc)
+   # will fail as it expects specific format
    :local leaseComment "dhcp-script-managed-$leaseActMAC-$leaseServerName"
-   # :local leaseComment "dhcp-script-managed-$leaseServerName-$leaseActMAC"
 
    # Remove existing DNS records linked to the MAC address except those with current hostname and IP address
    :foreach dns in=[/ip/dns/static/find comment~"$leaseActMAC" and (address!="$leaseActIP" or name!="$fqdn")] do={
@@ -52,6 +51,7 @@
       :local day [:pick [/system/clock/get date] 8 10]
       :local time [:pick [/system/clock/get time] 0 5]
 
+      :log info "Adding DNS record for $fqdn = $leaseActIP ($leaseActMAC)"
       /ip dns static add comment="$leaseComment" address="$leaseActIP" name="$fqdn" ttl="00:05:00"
       /tool e-mail send to="daniel@kefa.uk" subject="Alert - New device added ($fqdn)" body="New DNS record created on $day $month $year at $time:\n\n$fqdn = $leaseActIP ($leaseActMAC)"
    }
