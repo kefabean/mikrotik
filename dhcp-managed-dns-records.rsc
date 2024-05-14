@@ -1,7 +1,5 @@
 # DHCP lease script to send alert when new device is added to the network
 
-:local months [:toarray "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"]
-
 # Only add DNS record when registering DHCP client as deregistering usually immediately precedes a registration.
 :if ($leaseBound = "1") do={
 
@@ -27,7 +25,8 @@
    :log info "FQDN: $fqdn IP: $leaseActIP MAC: $leaseActMAC"
 
    # Set a comment that identifies the DNS record by DHCP server and MAC address
-   :local leaseComment "dhcp-script-managed-$leaseServerName-$leaseActMAC"
+   :local leaseComment "dhcp-script-managed-$leaseActMAC-$leaseServerName"
+   # :local leaseComment "dhcp-script-managed-$leaseServerName-$leaseActMAC"
 
    # Remove existing DNS records linked to the MAC address except those with current hostname and IP address
    :foreach dns in=[/ip/dns/static/find comment~"$leaseActMAC" and (address!="$leaseActIP" or name!="$fqdn")] do={
@@ -45,10 +44,14 @@
    # If no matching DNS record exists, create one and send email notification
    :if ([:len [/ip dns static find comment="$leaseComment" and address="$leaseActIP" and name="$fqdn"]] = 0) do={
       :delay 1
+
+      # generate friendly dates and times to include in email
+      :local months [:toarray "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"]
       :local year [:pick [/system/clock/get date] 0 4]
       :local month [:pick $months ([:tonum [:pick [/system/clock/get date] 5 7]] - 1)]
       :local day [:pick [/system/clock/get date] 8 10]
       :local time [:pick [/system/clock/get time] 0 5]
+
       /ip dns static add comment="$leaseComment" address="$leaseActIP" name="$fqdn" ttl="00:05:00"
       /tool e-mail send to="daniel@kefa.uk" subject="Alert - New device added ($fqdn)" body="New DNS record created on $day $month $year at $time:\n\n$fqdn = $leaseActIP ($leaseActMAC)"
    }
