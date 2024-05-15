@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Installs dhcp-managed-dns-records.rsc to multiple dhcp servers lease-script on Mikrotik via SSH
-# Script needs to escape out newlines, double quotes and dollar signs to work...but it also needs
-# to preserve '\n' newline characters used inside the scripts.
+# Installs dhcp-managed-dns-records.rsc lease-script on Mikrotik via SSH
+# where multiple dhcp servers are configured.
+# Script escapes newlines, double quotes and dollar signs, but preserves '\n' newline characters in scripts.
+# Also installs dhcp-cleanup-script that can be run daily to delete DNS entries for
+# IP addresses where no DHCP lease exists.
 
 DHCP_SERVERS=$(ssh admin@router.lan '/ip/dhcp-server/print proplist="name"' | grep -v NAME | awk -F' ' '{print $2}' | tr '\n\r' '\n')
 DHCP_SCRIPT=$(cat dhcp-managed-dns-records.rsc | sed 's/\\n/\\\\n/g' | sed 's/$/\\n/g' | sed 's/\(["$]\)/\\\1/g' | tr -d '\n')
