@@ -14,8 +14,10 @@ for DHCP_SERVER in $DHCP_SERVERS; do
    ssh admin@router.lan "/ip/dhcp-server/set $DHCP_SERVER lease-script=\"$DHCP_SCRIPT\""
 done
 
-echo "Updating dns-cleanup-script"
-DNS_CLEANUP_SCRIPT=$(cat remove-dns-for-expired-dhcp-lease.rsc | sed 's/\\n/\\\\n/g' | sed 's/$/\\n/g' | sed 's/\(["$]\)/\\\1/g' | tr -d '\n')
-echo "Ignore 'no such item' message if displayed on next line."
-ssh admin@router.lan "/system/script/remove dns-cleanup-script"
-ssh admin@router.lan "/system/script/add name=\"dns-cleanup-script\" source=\"$DNS_CLEANUP_SCRIPT\""
+for SCRIPT_NAME in dns-cleanup.rsc monitor-wan-ip.rsc; do
+   echo "Updating $SCRIPT_NAME"
+   SCRIPT_CONTENT=$(cat $SCRIPT_NAME | sed 's/\\n/\\\\n/g' | sed 's/$/\\n/g' | sed 's/\(["$]\)/\\\1/g' | tr -d '\n')
+   echo "Ignore 'no such item' message if displayed on next line."
+   ssh admin@router.lan "/system/script/remove $SCRIPT_NAME"
+   ssh admin@router.lan "/system/script/add name=\"$SCRIPT_NAME\" source=\"$SCRIPT_CONTENT\""
+done
