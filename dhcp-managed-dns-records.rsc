@@ -7,12 +7,10 @@
    :local leaseHostname $"lease-hostname"
 
    # create safe 'MAC' address without colons
-   :local a $leaseActMAC
-   :local b ":"
-   :while condition=[find $a $b] do={
-      :set $a ("$[:pick $a 0 ([find $a $b]) ]"."$[:pick $a ([find $a $b]+1) ([:len $a]) ]")
+   :local safeMAC $leaseActMAC
+   :while condition=[find $safeMAC ":"] do={
+      :set $safeMAC ("$[:pick $safeMAC 0 ([find $safeMAC ":"]) ]"."$[:pick $safeMAC ([find $safeMAC ":"]+1) ([:len $safeMAC]) ]")
    }
-   :local safeMAC $a
 
    # create default fqdn for devices with blank hostname
    :local fqdn
@@ -32,9 +30,6 @@
       :log info "Removing DNS record: $fqdn = $leaseActIP for $leaseActMAC MAC address"
       /ip/dns/static/remove $dns
    }
-
-   # Remove all managed DNS records for which the dhcp leases have expired
-   # TODO!!!
 
    # If the registration details exactly matches an existing DNS record do nothing
    :if ([:len [/ip dns static find comment="$leaseComment" and address="$leaseActIP" and name="$fqdn"]] = 1) do={
